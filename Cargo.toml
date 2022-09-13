@@ -1,0 +1,15 @@
+[package]
+name = "zellij-chooser"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ctrlc = "3.2.3"
+fork = "0.1.20"
+rustyline = "10.0.0"
+rustyline-derive = "0.7.0"
+zellij-utils = "0.31.4"
+
+[features]
