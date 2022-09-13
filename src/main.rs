@@ -50,7 +50,7 @@ fn main() {
     // (2) a session name passed from STDIN, where we would have joined
 }
 
-fn exit_zellij_not_found() -> ! {
+fn exit_zellij_not_found() {
     println!("Looks like zellij isn't available. Exiting.");
     std::process::exit(-1);
 }
