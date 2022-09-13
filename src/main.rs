@@ -7,6 +7,7 @@ use rustyline::{
 };
 use rustyline_derive::{Completer, Helper, Highlighter, Hinter};
 use std::env;
+use std::ffi::OsStr;
 use std::os::unix::fs::FileTypeExt;
 use std::process::{self, Command};
 use std::{fs, io};
@@ -50,7 +51,7 @@ fn main() {
     // (2) a session name passed from STDIN, where we would have joined
 }
 
-fn exit_zellij_not_found() {
+fn exit_zellij_not_found() -> ! {
     println!("Looks like zellij isn't available. Exiting.");
     std::process::exit(-1);
 }
@@ -115,11 +116,12 @@ fn assert_socket(name: &str) -> bool {
     }
 }
 
-fn spawn<T: Into<String>>(session: T) -> io::Result<()> {
+fn spawn<T: AsRef<OsStr>>(session: T) -> io::Result<()> {
     Ok(())
 }
 
-fn connect<T: AsRef<std::ffi::OsStr>>(session: T) -> Result<std::process::Child, std::io::Error> {
+#[allow(clippy::all)]
+fn connect<T: AsRef<OsStr>>(session: T) -> Result<std::process::Child, std::io::Error> {
     // The tricky part here is that we don't want to occupy
     // two entire processes, where one of them is a deadbeat parent
     // So, my idea here is to fork into a daemon, but preserve all the
@@ -129,7 +131,7 @@ fn connect<T: AsRef<std::ffi::OsStr>>(session: T) -> Result<std::process::Child,
     ) {
         // Opting to use `.spawn()` since it inherits the pipes
         // Otherwise, `.output()` would create new ones and detach
-        Command::new("zellij").arg("-a").arg(session).spawn()
+        Command::new("zellij").arg("attach").arg("-c").arg(session).spawn()
     } else {
         Err(std::io::Error::new(
             io::ErrorKind::BrokenPipe,
@@ -140,7 +142,7 @@ fn connect<T: AsRef<std::ffi::OsStr>>(session: T) -> Result<std::process::Child,
 
 fn interactive_select<T>(sessions: T) -> Result<(), Box<dyn std::error::Error>>
 where
-    T: IntoIterator,
+    T: IntoIterator + std::marker::Copy,
     T::Item: AsRef<str> + std::fmt::Display,
 {
     println!("Create a new session by entering the name for it, or select one from these options:");
@@ -156,7 +158,7 @@ where
         for (id, session) in sessions.into_iter().enumerate() {
             println!("({}) :: {}", &stringify!(id), &session);
         }
-        let feed = repl.readline(">>> ")?.as_str();
+        let feed = repl.readline(">>> ")?;
         if feed.is_empty() {
             continue;
         }
